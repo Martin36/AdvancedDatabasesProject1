@@ -77,6 +77,9 @@ router.post('/api/movie', (req, res, next) => {
 
 router.get('/api/movies', (req, res, next) => {
 	const results = [];
+	const search = req.query.s;
+	const titleSearch = req.query.title;
+	console.log(titleSearch);
 	// Get a Postgres client from the connection pool
 	pool.connect((err, client, done) => {
 		// Handle connection errors
@@ -86,11 +89,20 @@ router.get('/api/movies', (req, res, next) => {
 			return res.status(500).json({ success: false, data: err });
 		}
 		// SQL Query > Select Data
-		const query = client.query('SELECT * FROM movie ORDER BY movieid ASC;', (err, data) => {
+		let queryString;
+		if (titleSearch !== undefined && titleSearch !== null) {
+			queryString = "SELECT * FROM movie WHERE title = '" + titleSearch + "';";
+			console.log(queryString);
+		}
+		else {
+			queryString = 'SELECT * FROM movie LIMIT 10';
+		}
+
+		const query = client.query(queryString, (err, data) => {
 			if (err) {
 				done();
 				console.log(err);
-				return data.status(500).json({ success: false, data: err });
+				return res.status(500).json({ success: false, data: err });
 			}
 
 			//console.log(res);

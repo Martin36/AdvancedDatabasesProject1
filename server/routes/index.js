@@ -79,6 +79,8 @@ router.get('/api/movies', (req, res, next) => {
 	const results = [];
 	const search = req.query.s;
 	const amount = req.query.n;
+	//Is true if the search should include all the words, otherwise it should include any of the words
+	const inclusive = (req.query.i === 'true');
 	// Get a Postgres client from the connection pool
 	pool.connect((err, client, done) => {
 		// Handle connection errors
@@ -90,10 +92,20 @@ router.get('/api/movies', (req, res, next) => {
 		// SQL Query > Select Data
 		let queryString = 'SELECT * FROM movie ';
 		if (search !== undefined || search !== null) {
-			queryString += "WHERE to_tsvector(description) @@ plainto_tsquery('" + search + "') ";
+			//Split the string into separate words 
+			let words = search.split(" ");
+			let joinedSearch;
+			if (inclusive) {
+				joinedSearch = words.join(" & ");
+			}
+			else {
+				joinedSearch = words.join(" | ");
+			}
+			console.log(joinedSearch);
+			queryString += "WHERE to_tsvector(description) @@ to_tsquery('" + joinedSearch + "') ";
 		}
 		//Set the limit for nr of returns
-		if ((amount !== undefined || amount !== null) && Number.isInteger(amount)) {
+		if ((amount !== undefined || amount !== null) && !isNaN(amount)) {
 			queryString += "LIMIT " + amount + ";";
 		}
 		else {

@@ -78,8 +78,7 @@ router.post('/api/movie', (req, res, next) => {
 router.get('/api/movies', (req, res, next) => {
 	const results = [];
 	const search = req.query.s;
-	const titleSearch = req.query.title;
-	console.log(titleSearch);
+	const amount = req.query.n;
 	// Get a Postgres client from the connection pool
 	pool.connect((err, client, done) => {
 		// Handle connection errors
@@ -89,16 +88,21 @@ router.get('/api/movies', (req, res, next) => {
 			return res.status(500).json({ success: false, data: err });
 		}
 		// SQL Query > Select Data
-		let queryString;
-		if (titleSearch !== undefined && titleSearch !== null) {
-			queryString = "SELECT * FROM movie WHERE title = '" + titleSearch + "';";
-			console.log(queryString);
+		let queryString = 'SELECT * FROM movie ';
+		if (search !== undefined || search !== null) {
+			queryString += "WHERE to_tsvector(description) @@ plainto_tsquery('" + search + "') ";
+		}
+		//Set the limit for nr of returns
+		if ((amount !== undefined || amount !== null) && Number.isInteger(amount)) {
+			queryString += "LIMIT " + amount + ";";
 		}
 		else {
-			queryString = 'SELECT * FROM movie LIMIT 10';
+			queryString += "LIMIT 10;"; 
 		}
 
-		const query = client.query(queryString, (err, data) => {
+		console.log(queryString);
+
+		client.query(queryString, (err, data) => {
 			if (err) {
 				done();
 				console.log(err);

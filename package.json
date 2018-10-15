@@ -1,0 +1,23 @@
+{
+  "name": "advanceddatabasesproject1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Martin36/AdvancedDatabasesProject1.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Martin36/AdvancedDatabasesProject1/issues"
+  },
+  "homepage": "https://github.com/Martin36/AdvancedDatabasesProject1#readme",
+  "dependencies": {
+    "pg": "^7.5.0",
+    "supervisor": "^0.12.0"
+  }
+}

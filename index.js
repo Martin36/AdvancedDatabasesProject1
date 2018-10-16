@@ -7,7 +7,7 @@ $(function () {
 	if (searchText !== undefined) {
 		if (searchText !== undefined && searchText !== "") {
 			url += "s=" + searchText;
-			$("#search-input").val(searchText.split("+").join(" "));
+			$("#search-input").val(decodeURI(searchText.split("+").join(" ")));
 		}
 
 		var inclusiveOption = urlVars["inclusiveOption"];
@@ -27,7 +27,7 @@ $(function () {
 			data.data.forEach(function (d) {
 				var row = $("<tr></tr>");
 				var textCell = $("<td></td>");
-				textCell.html(d.ts_headline);
+				textCell.html(d.description);
 				var rankCell = $("<td></td>");
 				rankCell.html(d.rank);
 				row.append(textCell);

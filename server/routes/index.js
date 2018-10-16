@@ -95,24 +95,47 @@ router.get('/api/movies', (req, res, next) => {
 		let queryString = 'SELECT * FROM movie ';
 		if (search !== undefined || search !== null) {
 			//Split the string into separate words 
+			let searchWords = search.split('"');
+			//Remove empty strings
+			searchWords = searchWords.filter(function (word) {
+				//Remove all the empty strings and the ones with only white spaces
+				return /\S/.test(word);
+			});
+			console.log("Search words:", searchWords);
+			//Join each word in the phrases
+			let searchPhrases = searchWords.map(function (phrase) {
+				let words = phrase.split(" ");
+				words = words.filter((word) => { return word !== ''; });
+				let nrOfWords = words.length;
+				if (nrOfWords === 1) return words[0];
+				let result = "(";
+				words.forEach((word, i) => {
+					result += word;
+					if (i === nrOfWords - 1)
+						result += ")";
+					else
+						result += " & ";
+				});
+				return result;
+			});
+
 			let words = search.split(" ");
+			console.log("Search phrases:", searchPhrases);
 			let joinedSearch;
 			if (inclusive) {
-				joinedSearch = words.join(" & ");
+				joinedSearch = searchPhrases.join(" & ");
 			}
 			else {
-				joinedSearch = words.join(" | ");
+				joinedSearch = searchPhrases.join(" | ");
 			}
-			console.log(joinedSearch);
 			queryString =
-				`SELECT title, 
-								ts_headline(description, to_tsquery('${joinedSearch}')),
-								description,
+				`SELECT ts_headline(title, to_tsquery('${joinedSearch}')) title,
+								ts_headline(description, to_tsquery('${joinedSearch}')) description,
 								ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
-				 FROM movie `;
-			queryString += "WHERE to_tsvector(description) @@ to_tsquery('" + joinedSearch + "') ";
-			//Order by rank
-			queryString += "ORDER BY rank DESC ";
+				 FROM movie
+				 WHERE to_tsvector(description) @@ to_tsquery('${joinedSearch}') 
+				 ORDER BY rank DESC 
+			`;
 		}
 		//Set the limit for nr of returns
 		if ((amount !== undefined || amount !== null) && !isNaN(amount)) {

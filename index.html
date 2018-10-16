@@ -7,9 +7,12 @@
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+					integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+					crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	<script src="index.js"></script>
 
 	<style>
 		.main-content {
@@ -25,16 +28,34 @@
 	<div class="main-content">
 		<h2 class="title">Search for text in the database</h2>
 		<div class="search-container">
-			<form>
+			<form name="databaseSearch" onsubmit="makeSearch()">
 				<div class="form-group">
-					<input type="text" class="form-control" id="search-input" placeholder="Enter search text" />
+					<input type="text" class="form-control" id="search-input" placeholder="Enter search text" name="searchText" />
+				</div>
+				<div class="form-check form-check-inline">
+					<input class="form-check-input" type="radio" name="inclusiveOption" id="radioAdd" value="and">
+					<label class="form-check-label" for="radioAdd">AND</label>
+				</div>
+				<div class="form-check form-check-inline">
+					<input class="form-check-input" type="radio" name="inclusiveOption" id="radioOr" value="or">
+					<label class="form-check-label" for="radioOr">OR</label>
 				</div>
 				<button type="submit" id="search-button" class="btn btn-primary">Search</button>
 			</form>
 		</div>
 
 		<div class="results-container">
-			<p>SQL Query: <span id="query"></span></p>
+			<p>SQL Query: <br /> <span id="query"></span></p>
+			<p>Nr of documents retrieved: <span id="document-nr"></span></p>
+			<table id="results-table" class="table table-striped table-bordered">
+				<thead class="thead-dark">
+					<tr>
+						<th>Text</th>
+						<th>Rank</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+			</table>
 		</div>
 	</div>
 </body>

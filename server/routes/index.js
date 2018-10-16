@@ -13,10 +13,11 @@ const pool = new Pool({
 	port: 5432,
 });
 
-//pool.query('SELECT * FROM movie FETCH first 10 ROWS only', (err, res) => {
-//	console.log(err, res);
-//	pool.end();
-//});
+router.use(function (req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
+});
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -76,7 +77,8 @@ router.post('/api/movie', (req, res, next) => {
 });
 
 router.get('/api/movies', (req, res, next) => {
-	const results = [];
+	const results = {};
+	const dataRows = [];
 	const search = req.query.s;
 	const amount = req.query.n;
 	//Is true if the search should include all the words, otherwise it should include any of the words
@@ -102,17 +104,26 @@ router.get('/api/movies', (req, res, next) => {
 				joinedSearch = words.join(" | ");
 			}
 			console.log(joinedSearch);
+			queryString =
+				`SELECT title, 
+								ts_headline(description, to_tsquery('${joinedSearch}')),
+								description,
+								ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
+				 FROM movie `;
 			queryString += "WHERE to_tsvector(description) @@ to_tsquery('" + joinedSearch + "') ";
+			//Order by rank
+			queryString += "ORDER BY rank DESC ";
 		}
 		//Set the limit for nr of returns
 		if ((amount !== undefined || amount !== null) && !isNaN(amount)) {
 			queryString += "LIMIT " + amount + ";";
 		}
 		else {
-			queryString += "LIMIT 10;"; 
+			queryString += ";"; 
 		}
 
 		console.log(queryString);
+		results.queryString = queryString;
 
 		client.query(queryString, (err, data) => {
 			if (err) {
@@ -121,10 +132,11 @@ router.get('/api/movies', (req, res, next) => {
 				return res.status(500).json({ success: false, data: err });
 			}
 
-			//console.log(res);
 			data.rows.forEach(row => {
-				results.push(row);
+				dataRows.push(row);
 			});
+
+			results.data = dataRows;
 
 			return res.json(results);
 		});

@@ -1,8 +1,25 @@
 $(function () {
-
 	var url = "http://localhost:3000/api/movies?";
 	var urlVars = getUrlVars();
 	var searchText = urlVars["searchText"];
+
+	$("#search-input").autocomplete({
+		source: function (request, response) {
+			var searchText = $("#search-input").val();
+			var url = "http://localhost:3000/api/findsimilar?s=" + searchText;
+			$.get(url, {
+				q: request.term
+			}, function (data) {
+				var returnValue = data.map(function (d) {
+					return d.summary;
+				});
+				console.log(returnValue);
+				response(returnValue);
+
+			});
+		}
+	});
+
 
 	if (searchText !== undefined) {
 		if (searchText !== undefined && searchText !== "") {
@@ -26,15 +43,28 @@ $(function () {
 			var resultsTable = $("#results-table tbody");
 			data.data.forEach(function (d) {
 				var row = $("<tr></tr>");
+				var idCell = $("<td></td>");
+				idCell.html(d.movieid);
+				var titleCell = $("<td></td>");
+				titleCell.html(d.title);
 				var textCell = $("<td></td>");
-				textCell.html(d.description);
+				textCell.html(d.description_highlight);
+				var descCell = $("<td></td>");
+				descCell.html(d.description);
+				var summaryCell = $("<td></td>");
+				summaryCell.html(d.summary);
 				var rankCell = $("<td></td>");
 				rankCell.html(d.rank);
+
+				row.append(idCell);
+				row.append(titleCell);
 				row.append(textCell);
+				row.append(descCell);
+				row.append(summaryCell);
 				row.append(rankCell);
+
 				resultsTable.append(row);
 			});
-			console.log(data);
 		});
 	}
 

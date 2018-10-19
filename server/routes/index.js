@@ -101,7 +101,6 @@ router.get('/api/movies', (req, res, next) => {
 				//Remove all the empty strings and the ones with only white spaces
 				return /\S/.test(word);
 			});
-			console.log("Search words:", searchWords);
 			//Join each word in the phrases
 			let searchPhrases = searchWords.map(function (phrase) {
 				let words = phrase.split(" ");
@@ -119,8 +118,6 @@ router.get('/api/movies', (req, res, next) => {
 				return result;
 			});
 
-			let words = search.split(" ");
-			console.log("Search phrases:", searchPhrases);
 			let joinedSearch;
 			if (inclusive) {
 				joinedSearch = searchPhrases.join(" & ");
@@ -130,12 +127,15 @@ router.get('/api/movies', (req, res, next) => {
 			}
 			queryString =
 				`SELECT ts_headline(title, to_tsquery('${joinedSearch}')) title,
-								ts_headline(description, to_tsquery('${joinedSearch}')) description,
+								ts_headline(description, to_tsquery('${joinedSearch}')) description_highlight,
+								description,
+								movieid,
+								summary,
 								ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
 				 FROM movie
 				 WHERE to_tsvector(description) @@ to_tsquery('${joinedSearch}') 
-				 ORDER BY rank DESC 
-			`;
+				 ORDER BY movieid ASC
+				`;
 		}
 		//Set the limit for nr of returns
 		if ((amount !== undefined || amount !== null) && !isNaN(amount)) {
@@ -145,7 +145,6 @@ router.get('/api/movies', (req, res, next) => {
 			queryString += ";"; 
 		}
 
-		console.log(queryString);
 		results.queryString = queryString;
 
 		client.query(queryString, (err, data) => {
@@ -161,6 +160,7 @@ router.get('/api/movies', (req, res, next) => {
 
 			results.data = dataRows;
 
+			done();
 			return res.json(results);
 		});
 		// Stream results back one row at a time
@@ -175,5 +175,34 @@ router.get('/api/movies', (req, res, next) => {
 	});
 });
 
+router.get('/api/findsimilar', (req, res, next) => {
+	const search = req.query.s;
+
+	pool.connect((err, client, done) => {
+		// Handle connection errors
+		if (err) {
+			done();
+			console.log(err);
+			return res.status(500).json({ success: false, data: err });
+		}
+		if (search !== undefined && search !== "") {
+			let queryString = `
+				SELECT summary, similarity(summary, '${search}')  
+				FROM movie
+				WHERE summary % '${search}'
+				LIMIT 5;`;
+
+			client.query(queryString, (err, data) => {
+				if (err) {
+					done();
+					console.log(err);
+					return res.status(500).json({ success: false, data: err });
+				}
+				done();
+				return res.json(data.rows);
+			});
+		}
+	});
+});
 
 module.exports = router;

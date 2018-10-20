@@ -13,7 +13,6 @@ $(function () {
 				var returnValue = data.map(function (d) {
 					return d.summary;
 				});
-				console.log(returnValue);
 				response(returnValue);
 
 			});
@@ -70,30 +69,16 @@ $(function () {
 
 });
 
-function makeSearch() {
-	//event.preventDefault();
-	if (validateInput()) {
-		var url = "http://localhost:3000/api/movies?";
-		var urlVars = getUrlVars();
-		var searchText = urlVars["searchText"];
-		if (searchText !== undefined && searchText !== "")
-			url += "s=" + searchText;
-		var inclusiveOption = urlVars["inclusiveOption"];
-		if (inclusiveOption === "or")
-			url += "&i=false";
-		else
-			url += "&i=true";
+function addNewMovie() {
+	var postData = {
+		title: $("#titleInput").val(),
+		categories: $("#categoriesInput").val(),
+		summary: $("#summaryInput").val(),
+		description: $("#descriptionInput").val()
+	};
 
-		$.get(url, function (data, status) {
-			console.log(data);
-		});
+	$.post("http://localhost:3000/api/movie", postData);
 
-	}
-	return false;
-}
-//TODO: implement this
-function validateInput() {
-	return true;
 }
 
 function getUrlVars() {

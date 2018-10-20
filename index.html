@@ -32,9 +32,15 @@
 </head>
 <body>
 	<div class="main-content">
+
+		<!-- Button trigger modal -->
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+			Add Item
+		</button>
+
 		<h2 class="title">Search for text in the database</h2>
 		<div class="search-container">
-			<form name="databaseSearch" onsubmit="makeSearch()">
+			<form name="databaseSearch" >
 				<div class="form-group">
 					<input type="text" id="search-input" placeholder="Enter search text" name="searchText" />
 				</div>
@@ -68,5 +74,44 @@
 			</table>
 		</div>
 	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Add a new moive</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form>
+						<div class="form-group">
+							<label for="titleInput">Title*</label>
+							<input type="text" class="form-control" id="titleInput" placeholder="Title of the movie...">
+						</div>
+						<div class="form-group">
+							<label for="categoriesInput">Categories*</label>
+							<input type="text" class="form-control" id="categoriesInput" placeholder="Genres of the movie...">
+						</div>
+						<div class="form-group">
+							<label for="summaryInput">Summary*</label>
+							<textarea class="form-control" id="summaryInput" rows="3"></textarea>
+						</div>
+						<div class="form-group">
+							<label for="descriptionInput">Description*</label>
+							<textarea class="form-control" id="descriptionInput" rows="3"></textarea>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="addNewMovie()">Submit</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </body>
 </html>

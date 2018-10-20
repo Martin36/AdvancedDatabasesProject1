@@ -36,7 +36,6 @@ router.post('/api/movie', (req, res, next) => {
 	results.push(data);
 	// Get a Postgres client from the connection pool
 	pool.connect((err, client, release) => {
-		console.log(release);
 		// Handle connection errors
 		if (err) {
 			console.log(err);
@@ -54,7 +53,6 @@ router.post('/api/movie', (req, res, next) => {
 					release();
 					return res.status(500).json({ success: false, data: err });
 				}
-				console.log(data);
 				release();
 				return res.json(data.rows);
 			});
@@ -93,7 +91,7 @@ router.get('/api/movies', (req, res, next) => {
 		}
 		// SQL Query > Select Data
 		let queryString = 'SELECT * FROM movie ';
-		if (search !== undefined || search !== null) {
+		if (search !== undefined && search !== null) {
 			//Split the string into separate words 
 			let searchWords = search.split('"');
 			//Remove empty strings
@@ -134,8 +132,12 @@ router.get('/api/movies', (req, res, next) => {
 								ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
 				 FROM movie
 				 WHERE to_tsvector(description) @@ to_tsquery('${joinedSearch}') 
-				 ORDER BY movieid ASC
+				 ORDER BY rank DESC
 				`;
+			/* Add these if search in all the fields are required
+			 *OR to_tsvector(title) @@ to_tsquery('${joinedSearch}')
+				OR to_tsvector(summary) @@ to_tsquery('${joinedSearch}')
+			*/
 		}
 		//Set the limit for nr of returns
 		if ((amount !== undefined || amount !== null) && !isNaN(amount)) {

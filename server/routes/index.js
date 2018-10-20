@@ -19,11 +19,6 @@ router.use(function (req, res, next) {
 	next();
 });
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
-
 router.post('/api/movie', (req, res, next) => {
 	const results = [];
 	// Grab data from http request
@@ -56,21 +51,6 @@ router.post('/api/movie', (req, res, next) => {
 				release();
 				return res.json(data.rows);
 			});
-
-		// SQL Query > Select Data
-		//const query = client.query('SELECT * FROM movie ORDER BY movieid DESC', (err, res) => {
-		//	console.log(res);
-		//	return res.
-		//});
-		// Stream results back one row at a time
-		//query.on('row', (row) => {
-		//	results.push(row);
-		//});
-		// After all data is returned, close connection and return results
-		//query.on('end', () => {
-		//	release();
-		//	return res.json(results);
-		//});
 	});
 });
 
@@ -162,18 +142,24 @@ router.get('/api/movies', (req, res, next) => {
 
 			results.data = dataRows;
 
-			done();
-			return res.json(results);
+			//Log the query
+			let modifiedQueryString = queryString.split("'").join('"');
+			//Remove unnessesary spaces and line breaks
+			modifiedQueryString = modifiedQueryString.replace(/\s+/g, ' ').trim();
+			let logQuery = `INSERT INTO logs VALUES(current_timestamp, '${modifiedQueryString}');`;
+			//Replace all ' with "
+			console.log(logQuery);
+			client.query(logQuery, (err, d) => {
+				if (err) {
+					done();
+					console.log(err);
+					return res.status(500).json({ success: false, data: err });
+				}
+				console.log("Query logged!");
+				done();
+				return res.json(results);
+			});
 		});
-		// Stream results back one row at a time
-		//query.on('row', (row) => {
-		//	results.push(row);
-		//});
-		//// After all data is returned, close connection and return results
-		//query.on('end', () => {
-		//	done();
-		//	return res.json(results);
-		//});
 	});
 });
 

@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/movies';
 
-const { Pool, Client } = require('pg');
+const { Pool } = require('pg');
 
 const pool = new Pool({
 	user: 'postgres',
@@ -146,9 +144,8 @@ router.get('/api/movies', (req, res, next) => {
 			let modifiedQueryString = queryString.split("'").join('"');
 			//Remove unnessesary spaces and line breaks
 			modifiedQueryString = modifiedQueryString.replace(/\s+/g, ' ').trim();
-			let logQuery = `INSERT INTO logs VALUES(current_timestamp, '${modifiedQueryString}');`;
+			let logQuery = `INSERT INTO logs VALUES(current_timestamp, '${joinedSearch}');`;
 			//Replace all ' with "
-			console.log(logQuery);
 			client.query(logQuery, (err, d) => {
 				if (err) {
 					done();
@@ -190,6 +187,39 @@ router.get('/api/findsimilar', (req, res, next) => {
 				return res.json(data.rows);
 			});
 		}
+	});
+});
+
+router.get('/api/logs', (req, res, next) => {
+	pool.connect((err, client, done) => {
+		if (err) {
+			done();
+			console.log(err);
+			return res.status(500).json({ success: false, data: err });
+		}
+		//TODO: Make this work
+		let queryString = `
+			SELECT * 
+			FROM crosstab('
+				SELECT query::character(200) AS queryStr
+						 , log_time::date AS timeDate
+						 , COUNT (*)::int AS nrOfLogs
+				FROM logs
+				GROUP BY queryStr, timeDate
+				ORDER BY queryStr, timeDate')
+			AS pivotTable (queryStr CHARACTER(200), timeDate DATE, October INT)
+			ORDER BY queryStr;
+		`;
+
+		client.query(queryString, (err, data) => {
+			if (err) {
+				done();
+				console.log(err);
+				return res.status(500).json({ success: false, data: err });
+			}
+			done();
+			return res.json(data.rows);
+		});
 	});
 });
 

@@ -19,6 +19,7 @@ $(function () {
 		}
 	});
 
+	//createLogsTable();
 
 	if (searchText !== undefined) {
 		if (searchText !== undefined && searchText !== "") {
@@ -79,6 +80,26 @@ function addNewMovie() {
 
 	$.post("http://localhost:3000/api/movie", postData);
 
+}
+
+function createLogsTable() {
+	var url = "http://localhost:3000/api/logs";
+	$.get(url, function (data) {
+		var table = $("#logs-table tbody");
+		data.forEach(function (d) {
+			var row = $("<tr></tr>");
+
+			var yearCell = $("<td></td>");
+			yearCell.html(d.year);
+			row.append(yearCell);
+
+			var octCell = $("<td></td>");
+			octCell.html(d.october);
+			row.append(octCell);
+
+			table.append(row);
+		});
+	});
 }
 
 function getUrlVars() {

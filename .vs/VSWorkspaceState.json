@@ -3,9 +3,8 @@
     "",
     "\\server",
     "\\server\\models",
-    "\\server\\node_modules\\pg",
     "\\server\\routes"
   ],
-  "SelectedNode": "\\index.html",
+  "SelectedNode": "\\server\\routes\\index.js",
   "PreviewInSolutionExplorer": false
 }

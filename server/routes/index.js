@@ -208,6 +208,13 @@ router.get('/api/findsimilar', (req, res, next) => {
 });
 
 router.get('/api/logs', (req, res, next) => {
+	const from = req.query.from;
+	const to = req.query.to;
+	const fromDay = from.split("-").pop();
+	const toDay = to.split("-").pop();
+	const nrOfDays = getNrOfDays(from, to);
+
+	console.log(from);
 	pool.connect((err, client, done) => {
 		if (err) {
 			done();
@@ -217,10 +224,24 @@ router.get('/api/logs', (req, res, next) => {
 		let createTableQuery = `
 			CREATE TEMP TABLE day
 			(dayOrd INT);
-			INSERT INTO day VALUES(20);
-			INSERT INTO day VALUES(21);
-			INSERT INTO day VALUES(22);
 		`;
+		//Create the table dynamically
+		for (let i = 0; i <= nrOfDays; i++) {
+			let currentDay = parseInt(fromDay) + i;
+			createTableQuery += `INSERT INTO day VALUES(${currentDay}); `;
+		}
+		console.log(createTableQuery);
+
+		//For static dates
+		//let createTableQuery = `
+		//	CREATE TEMP TABLE day
+		//	(dayOrd INT);
+		//	INSERT INTO day VALUES(20);
+		//	INSERT INTO day VALUES(21);
+		//	INSERT INTO day VALUES(22);
+		//`;
+
+		
 		client.query(createTableQuery, (err, data) => {
 			if (err) {
 				done();
@@ -247,7 +268,6 @@ router.get('/api/logs', (req, res, next) => {
 					console.log(err);
 					return res.status(500).json({ success: false, data: err });
 				}
-				console.log(data.rows);
 				done();
 				return res.json(data.rows);
 			});
@@ -268,10 +288,17 @@ router.get('/api/logs', (req, res, next) => {
 				 ORDER BY day')
 			AS pivotTable (queryStr CHARACTER(200), d20102018 INT, d21102018 INT, d22102018 INT)
 			ORDER BY queryStr;
-
 		`;
 
 	});
 });
+
+function getNrOfDays(from, to) {
+	var date1 = new Date(from);
+	var date2 = new Date(to);
+	var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+	var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+	return diffDays;
+}
 
 module.exports = router;

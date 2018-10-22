@@ -18,6 +18,9 @@ $(function () {
 			});
 		}
 	});
+	//Set default dates
+	$("#fromDate").val("2018-10-20");
+	$("#toDate").val("2018-10-22");
 
 	createLogsTable();
 
@@ -84,6 +87,11 @@ function addNewMovie() {
 
 function createLogsTable() {
 	var url = "http://localhost:3000/api/logs";
+	var fromDate = $("#fromDate").val();
+	var toDate = $("#toDate").val();
+	if ((fromDate !== undefined && fromDate !== "") && (toDate !== undefined && toDate !== "")) {
+		url += "?from=" + fromDate + "&to=" + toDate;
+	}
 	$.get(url, function (data) {
 		//Create the thead
 		console.log(data);

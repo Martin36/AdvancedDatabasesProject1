@@ -19,7 +19,7 @@ $(function () {
 		}
 	});
 
-	//createLogsTable();
+	createLogsTable();
 
 	if (searchText !== undefined) {
 		if (searchText !== undefined && searchText !== "") {
@@ -85,18 +85,28 @@ function addNewMovie() {
 function createLogsTable() {
 	var url = "http://localhost:3000/api/logs";
 	$.get(url, function (data) {
+		//Create the thead
+		console.log(data);
+		if (data.length === 0) return;
+		
+		var thead = $("#logs-table thead");
+		var columns = Object.keys(data[0]);
+		var row = $("<tr></tr>");
+		columns.forEach(function (col) {
+			var th = $("<th></th>");
+			th.html(col);
+			row.append(th);
+		});
+		thead.append(row);
+
 		var table = $("#logs-table tbody");
 		data.forEach(function (d) {
 			var row = $("<tr></tr>");
-
-			var yearCell = $("<td></td>");
-			yearCell.html(d.year);
-			row.append(yearCell);
-
-			var octCell = $("<td></td>");
-			octCell.html(d.october);
-			row.append(octCell);
-
+			columns.forEach((col) => {
+				var cell = $("<td></td>");
+				cell.html(d[col]);
+				row.append(cell);
+			});
 			table.append(row);
 		});
 	});

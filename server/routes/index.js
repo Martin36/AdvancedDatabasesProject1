@@ -57,6 +57,8 @@ router.get('/api/movies', (req, res, next) => {
 	const dataRows = [];
 	const search = req.query.s;
 	const amount = req.query.n;
+
+	let joinedSearch;
 	//Is true if the search should include all the words, otherwise it should include any of the words
 	const inclusive = (req.query.i === 'true');
 	// Get a Postgres client from the connection pool
@@ -94,24 +96,39 @@ router.get('/api/movies', (req, res, next) => {
 				return result;
 			});
 
-			let joinedSearch;
 			if (inclusive) {
 				joinedSearch = searchPhrases.join(" & ");
 			}
 			else {
 				joinedSearch = searchPhrases.join(" | ");
 			}
+			//Query string without english language
+			//queryString =
+			//	`SELECT ts_headline(title, to_tsquery('${joinedSearch}')) title,
+			//					ts_headline(description, to_tsquery('${joinedSearch}')) description_highlight,
+			//					description,
+			//					movieid,
+			//					summary,
+			//					ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
+			//	 FROM movie
+			//	 WHERE to_tsvector(description) @@ to_tsquery('${joinedSearch}') 
+			//	 ORDER BY rank DESC
+			//	`;
+
+			//Query string with english language
 			queryString =
-				`SELECT ts_headline(title, to_tsquery('${joinedSearch}')) title,
-								ts_headline(description, to_tsquery('${joinedSearch}')) description_highlight,
+				`SELECT ts_headline(title, to_tsquery('english', '${joinedSearch}')) title,
+								ts_headline(description, to_tsquery('english', '${joinedSearch}')) description_highlight,
 								description,
 								movieid,
 								summary,
-								ts_rank(to_tsvector(description), to_tsquery('${joinedSearch}')) rank
+								ts_rank(to_tsvector(description), to_tsquery('english', '${joinedSearch}')) rank
 				 FROM movie
-				 WHERE to_tsvector(description) @@ to_tsquery('${joinedSearch}') 
+				 WHERE to_tsvector(description) @@ to_tsquery('english', '${joinedSearch}') 
 				 ORDER BY rank DESC
 				`;
+
+
 			/* Add these if search in all the fields are required
 			 *OR to_tsvector(title) @@ to_tsquery('${joinedSearch}')
 				OR to_tsvector(summary) @@ to_tsquery('${joinedSearch}')
@@ -197,29 +214,63 @@ router.get('/api/logs', (req, res, next) => {
 			console.log(err);
 			return res.status(500).json({ success: false, data: err });
 		}
-		//TODO: Make this work
-		let queryString = `
-			SELECT * 
-			FROM crosstab('
-				SELECT query::character(200) AS queryStr
-						 , log_time::date AS timeDate
-						 , COUNT (*)::int AS nrOfLogs
-				FROM logs
-				GROUP BY queryStr, timeDate
-				ORDER BY queryStr, timeDate')
-			AS pivotTable (queryStr CHARACTER(200), timeDate DATE, October INT)
-			ORDER BY queryStr;
+		let createTableQuery = `
+			CREATE TEMP TABLE day
+			(dayOrd INT);
+			INSERT INTO day VALUES(20);
+			INSERT INTO day VALUES(21);
+			INSERT INTO day VALUES(22);
 		`;
-
-		client.query(queryString, (err, data) => {
+		client.query(createTableQuery, (err, data) => {
 			if (err) {
 				done();
 				console.log(err);
 				return res.status(500).json({ success: false, data: err });
 			}
-			done();
-			return res.json(data.rows);
+			let queryString = `
+				SELECT * 
+				FROM crosstab('
+					SELECT query::TEXT AS queryStr
+								, EXTRACT(DAY FROM log_time)::int AS day
+								, COUNT (*)::int AS nrOfLogs
+					FROM logs
+					GROUP BY queryStr, day
+					ORDER BY queryStr, day',
+					'SELECT dayOrd FROM day ORDER BY dayOrd')
+				AS pivotTable (queryStr TEXT, d20102018 INT, d21102018 INT, d22102018 INT)
+				ORDER BY queryStr;
+			`;
+
+			client.query(queryString, (err, data) => {
+				if (err) {
+					done();
+					console.log(err);
+					return res.status(500).json({ success: false, data: err });
+				}
+				console.log(data.rows);
+				done();
+				return res.json(data.rows);
+			});
+
 		});
+
+		let queryStringTest = `
+			SELECT * 
+			FROM crosstab('
+				SELECT query::character(200) AS queryStr
+						 , EXTRACT(DAY FROM log_time)::int AS day
+						 , COUNT (*)::int AS nrOfLogs
+				FROM logs
+				GROUP BY queryStr, day
+				ORDER BY queryStr, day',
+				'SELECT DISTINCT EXTRACT(DAY FROM log_time)::int AS day
+				 FROM logs
+				 ORDER BY day')
+			AS pivotTable (queryStr CHARACTER(200), d20102018 INT, d21102018 INT, d22102018 INT)
+			ORDER BY queryStr;
+
+		`;
+
 	});
 });
 

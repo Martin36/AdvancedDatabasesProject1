@@ -12,10 +12,62 @@ CREATE TABLE logs (
 SELECT * 
 FROM crosstab('
 	SELECT EXTRACT(YEAR FROM log_time)::int AS year
-			 , EXTRACT(MONTH FROM log_time)::int AS month
+			 , EXTRACT(DAY FROM log_time)::int AS day
 			 , COUNT (*)::int AS nrOfLogs
 	FROM logs
-	GROUP BY year, month
-	ORDER BY year, month')
-AS pivotTable (year INT, October INT)
+	GROUP BY year, day
+	ORDER BY year, day')
+AS pivotTable (year INT, day1 INT, day2 INT, day3 INT)
 ORDER BY year;
+
+
+SELECT * FROM logs WHERE EXTRACT(DAY FROM log_time)::int = 22;
+
+CREATE TABLE day
+(dayOrd INT);
+INSERT INTO day VALUES(01);
+INSERT INTO day VALUES(02);
+INSERT INTO day VALUES(03);
+INSERT INTO day VALUES(04);
+INSERT INTO day VALUES(05);
+INSERT INTO day VALUES(06);
+INSERT INTO day VALUES(07);
+INSERT INTO day VALUES(08);
+INSERT INTO day VALUES(09);
+INSERT INTO day VALUES(10);
+INSERT INTO day VALUES(11);
+INSERT INTO day VALUES(12);
+INSERT INTO day VALUES(13);
+INSERT INTO day VALUES(14);
+INSERT INTO day VALUES(15);
+INSERT INTO day VALUES(16);
+INSERT INTO day VALUES(17);
+INSERT INTO day VALUES(18);
+INSERT INTO day VALUES(19);
+INSERT INTO day VALUES(23);
+INSERT INTO day VALUES(24);
+INSERT INTO day VALUES(25);
+INSERT INTO day VALUES(26);
+INSERT INTO day VALUES(27);
+INSERT INTO day VALUES(28);
+INSERT INTO day VALUES(29);
+INSERT INTO day VALUES(30);
+INSERT INTO day VALUES(31);
+
+CREATE TEMP TABLE day
+(dayOrd INT);
+INSERT INTO day VALUES(20);
+INSERT INTO day VALUES(21);
+INSERT INTO day VALUES(22);
+
+SELECT * 
+FROM crosstab('
+	SELECT query::TEXT AS queryStr
+				, EXTRACT(DAY FROM log_time)::int AS day
+				, COUNT (*)::int AS nrOfLogs
+	FROM logs
+	GROUP BY queryStr, day
+	ORDER BY queryStr, day',
+	'SELECT dayOrd FROM day ORDER BY dayOrd')
+AS pivotTable (queryStr TEXT, d20102018 INT, d21102018 INT, d22102018 INT)
+ORDER BY queryStr;
